@@ -165,8 +165,12 @@
             });
         }
 
+        // Wait for the window, including Chart.js, to fully load before running
+        window.addEventListener('load', function() {
+            runSimulation();
+        });
         // Run simulation immediately on script load to draw initial graph
-        runSimulation();
+        // runSimulation();
     </script>
 </body>
 </html>
