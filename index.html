@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squirrel Leslie Matrix Simulator</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://jsdelivr.net"></script>
+    <!-- Chart.js for the population graph -->
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body class="bg-gray-100 p-6 font-sans">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">🐿️ Squirrel Leslie Matrix Simulator</h1>
+        <p class="text-gray-600 mb-6">Adjust the initial population sizes to see how the distribution affects population growth over 10 generations.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">Newborns (0-1 yrs)</label>
+                <input type="number" id="newborns" value="100" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">Youths (2-3 yrs)</label>
+                <input type="number" id="youths" value="50" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">Adults (4-5 yrs)</label>
+                <input type="number" id="adults" value="10" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+            </div>
+        </div>
+
+        <button onclick="runSimulation()" class="w-full bg-emerald-600 text-white font-bold py-2 px-4 rounded-md hover:bg-emerald-700 transition">
+            Run Simulation
+        </button>
+
+        <div class="mt-8">
+            <canvas id="growthChart" class="w-full h-64"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Leslie Matrix Constants from our example
+        // Row 1 (Fecundity): [0.5, 3.0, 2.0]
+        // Row 2 (Survival 1): [0.4, 0, 0]
+        // Row 3 (Survival 2): [0, 0.6, 0.3]
+        const F = [0.5, 3.0, 2.0];
+        const S1 = 0.4;
+        const S2 = 0.6;
+        const S3 = 0.3; // adult ongoing survival
+
+        let chartInstance = null;
+
+        function runSimulation() {
+            // Get initial values from inputs
+            let n0 = parseFloat(document.getElementById('newborns').value) || 0;
+            let n1 = parseFloat(document.getElementById('youths').value) || 0;
+            let n2 = parseFloat(document.getElementById('adults').value) || 0;
+
+            let populationHistory = [n0 + n1 + n2];
+            let labels = ["Gen 0"];
+
+            // Simulate 10 generations
+            for (let g = 1; g <= 10; g++) {
+                // Matrix Multiplication
+                let next_n0 = (F[0] * n0) + (F[1] * n1) + (F[2] * n2);
+                let next_n1 = S1 * n0;
+                let next_n2 = (S2 * n1) + (S3 * n2);
+
+                // Update current populations
+                n0 = next_n0;
+                n1 = next_n1;
+                n2 = next_n2;
+
+                let total = n0 + n1 + n2;
+                populationHistory.push(Math.round(total));
+                labels.push("Gen " + g);
+            }
+
+            renderChart(labels, populationHistory);
+        }
+
+        function renderChart(labels, data) {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Squirrel Population',
+                        data: data,
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Initial run on page load
+        runSimulation();
+    </script>
+</body>
+</html>
